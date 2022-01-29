@@ -39,6 +39,10 @@ on:
         description: 'Optimize count'
         required: true
         type: string
+      env:
+        description: 'Env'
+        required: true
+        type: string
 
 jobs:
   build:
@@ -59,6 +63,7 @@ jobs:
           echo "No DFX found. Start downloading..."
           curl -fsSL https://sdk.dfinity.org/install.sh | bash
       - name: Init Verification
+        if: always()
         run: |
           if ! type dfx > /dev/null
           then
@@ -66,7 +71,18 @@ jobs:
            echo "No DFX found. Start downloading..."
            DFX_VERSION="" sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
           fi
-          dfx canister --network ic call 3x7en-uqaaa-aaaai-abgca-cai submitVerification  \
+          if [ "${{ github.event.inputs.env }}" = "development" ]
+          then
+            echo "${{ secrets.COVER_BUILDER_PEM_DEV }}" > identity.pem
+            CANISTER_ID="3x7en-uqaaa-aaaai-abgca-cai"
+          else
+            echo "${{ secrets.COVER_BUILDER_PEM_PROD }}" > identity.pem
+            CANISTER_ID="iftvq-niaaa-aaaai-qasga-cai"
+          fi
+          echo "CANISTER_ID=${CANISTER_ID}" >> $GITHUB_ENV
+          dfx identity import cover identity.pem
+          dfx identity use cover
+          dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
             owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
             canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
@@ -140,8 +156,7 @@ jobs:
           done
       - name: Hash wasm
         run: |
-          echo "WASM_HASH=$(openssl dgst -sha256 .dfx/ic/canisters/${{ github.event.inputs.canister_name }}/
-          ${{ github.event.inputs.canister_name }}.wasm | awk '/.+$/{print "0x"$2}')" >> $GITHUB_ENV
+          echo "WASM_HASH=$(openssl dgst -sha256 .dfx/ic/canisters/${{ github.event.inputs.canister_name }}/${{ github.event.inputs.canister_name }}.wasm | awk '/.+$/{print "0x"$2}')" >> $GITHUB_ENV
       - name: Update verification
         if: always()
         run: |
@@ -152,7 +167,7 @@ jobs:
           else
             status="variant{ Success }"
           fi
-          dfx canister --network ic call 3x7en-uqaaa-aaaai-abgca-cai submitVerification  \
+          dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
             owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
             canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
