@@ -45,6 +45,40 @@ jobs:
     runs-on: ubuntu-latest
     container: namdh2604/cover
     steps:
+      - name: Cache DFX
+        id: cache-dfx
+        uses: actions/cache@v2
+        with:
+          path: /usr/local/bin/dfx
+          key: Ubuntu-dfx-version-${{ github.event.inputs.dfx_version }}
+      - name: Install DFX
+        if: steps.cache-dfx.outputs.cache-hit != 'true'
+        env:
+          DFX_VERSION: ${{ github.event.inputs.dfx_version }}
+        run: |
+          echo "No DFX found. Start downloading..."
+          curl -fsSL https://sdk.dfinity.org/install.sh | bash
+      - name: Init Verification
+        run: |
+          if ! type dfx > /dev/null
+          then
+           rm dfx.json
+           echo "No DFX found. Start downloading..."
+           DFX_VERSION="" sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
+          fi
+          dfx canister --network ic call 3x7en-uqaaa-aaaai-abgca-cai submitVerification  \
+          "(record{ \
+            owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
+            canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
+            canister_name=\"${{ github.event.inputs.canister_name }}\"; \
+            repo_url=\"${{ github.event.inputs.repo_url }}\"; \
+            commit_hash=\"${{ github.event.inputs.commit_hash }}\"; \
+            build_url=\"https://github.com/Psychedelic/cover/actions/runs/${{github.run_id}}\"; \
+            build_status=variant{ Building }; \
+            rust_version=opt\"${{ github.event.inputs.rust_version }}\"; \
+            dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
+            optimize_count=${{ github.event.inputs.optimize_count }}:nat8 \
+          })"
       - name: Clone github repo
         run: |
           git init
@@ -74,12 +108,6 @@ jobs:
             /opt/rustup/
             target/
           key: Ubuntu-cargo-${{ hashFiles('**/Cargo.lock') }}-version-${{ github.event.inputs.rust_version }}
-      - name: Cache DFX
-        id: cache-dfx
-        uses: actions/cache@v2
-        with:
-          path: /usr/local/bin/dfx
-          key: Ubuntu-dfx-version-${{ github.event.inputs.dfx_version }}
       - name: Setup env
         if: github.event.inputs.rust_version != ''
         run: |
@@ -95,13 +123,6 @@ jobs:
           curl --fail https://sh.rustup.rs/ -sSf | sh -s -- -y --default-toolchain ${RUST_VERSION}-x86_64-unknown-linux-gnu --no-modify-path
           rustup default ${RUST_VERSION}-x86_64-unknown-linux-gnu
           rustup target add wasm32-unknown-unknown
-      - name: Install DFX
-        if: steps.cache-dfx.outputs.cache-hit != 'true'
-        env:
-          DFX_VERSION: ${{ github.event.inputs.dfx_version }}
-        run: |
-          echo "No DFX found. Start downloading..."
-          curl -fsSL https://sdk.dfinity.org/install.sh | bash
       - name: Install optimizer
         if: github.event.inputs.rust_version != '' && steps.cache-rust.outputs.cache-hit != 'true'
         run: cargo install ic-cdk-optimizer --vers 0.3.3
@@ -124,12 +145,6 @@ jobs:
       - name: Update verification
         if: always()
         run: |
-          if ! type dfx > /dev/null
-          then
-           rm dfx.json
-           echo "No DFX found. Start downloading..."
-           DFX_VERSION="" sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
-          fi
           hash=opt\"$WASM_HASH\"
           if [ -z "$WASM_HASH" ]
           then
