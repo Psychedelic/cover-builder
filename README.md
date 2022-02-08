@@ -19,7 +19,7 @@ RUN \
         build-essential pkg-config libssl-dev llvm-dev liblmdb-dev clang cmake git
 
 # Replace your Rust version here
-ARG rust_version=1.58
+ARG rust_version=1.58.1
 ENV RUSTUP_HOME=/opt/rustup \
     CARGO_HOME=/opt/cargo \
     PATH=/opt/cargo/bin:$PATH
@@ -34,12 +34,20 @@ RUN cargo install ic-cdk-optimizer
 ENV DFX_VERSION=0.8.4
 RUN sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
 
-COPY . /canister
+# OR mount volumne
+# COPY . /canister
+
 WORKDIR /canister
+
+# Example: Build and Optimize
+# RUN dfx build --network ic <your_canister_name>
+# RUN ic-cdk-optimizer .dfx/ic/canisters/<your_canister_name>/<your_canister_name>.wasm \
+#             -o .dfx/ic/canisters/<your_canister_name>/<your_canister_name>.wasm
+# RUN openssl dgst -sha256 .dfx/ic/canisters/<your_canister_name>/<your_canister_name>.wasm | awk '/.+$/{print "0x"$2}' > wasm_hash
 ```
 - Build docker image
 ```bash
-$ docker build -t DOCKER_IMAGE_NAME DOCKERFILE_PATH
+$ docker build -t DOCKER_IMAGE_NAME -f DOCKERFILE_PATH .
 ```
 - Run docker image and build your wasm
 ```bash
@@ -49,7 +57,7 @@ $ docker run -it DOCKER_IMAGE_NAME
 >>> ic-cdk-optimizer YOUR_IN_WASM.wasm -o YOUR_OUT_WASM.wasm
 
 # To deploy and verify your canister wasm hash
->>> dfx canister --network ic install YOUR_CANISTER_NAME -m ACTION
+>>> dfx canister --network ic install YOUR_CANISTER_NAME
 >>> dfx canister --network ic info YOUR_CANISTER_NAME
 
 # To verify your local wasm hash
@@ -63,7 +71,7 @@ $ openssl dgst -sha256 YOUR_WASM | awk '{print $2}'
     - After cover builds your wasm, the hash and the status of the build process will be updated to your verification.
     - You can check out the Build URL field of the verification to see what went wrong with the build process if it failed.
   - **Method 2**: Use API.
-    - You can use the API provided by [Cover-validator]() to validate and build your wasm
+    - You can use the API provided by [Cover-validator](https://github.com/Psychedelic/cover-validator) to validate and build your wasm
     - After that you can use this command to check your verification (it may take a while to build wasm and update your verification):
 ```bash
 $  dfx canister --network ic call COVER_CANISTER_ID \
