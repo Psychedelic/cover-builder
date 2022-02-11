@@ -103,8 +103,12 @@ jobs:
           git reset --hard FETCH_HEAD
       - name: Validate dfx build type
         run: |
-          case  $(jq '.canisters.${{ github.event.inputs.canister_name }}.type' < dfx.json) in
+          CANISTER_TYPE=$(jq '.canisters.${{ github.event.inputs.canister_name }}.type' < dfx.json)
+          case $CANISTER_TYPE in
             (\"rust\" | \"motoko\")
+              CANISTER_TYPE="$(echo ${CANISTER_TYPE} | tr -d '"')"
+              CANISTER_TYPE="$(echo ${CANISTER_TYPE} | awk '{ print toupper(substr($0, 1, 1)) substr($0, 2) }')"
+              echo "CANISTER_TYPE=$CANISTER_TYPE" >> $GITHUB_ENV
               echo "Passed"
               ;;
             (*)
@@ -167,6 +171,11 @@ jobs:
           else
             status="variant{ Success }"
           fi
+          canister_type=null
+          if [ ! -z "$CANISTER_TYPE" ]
+          then
+            canister_type="opt variant{ $CANISTER_TYPE }"
+          fi
           dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
             owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
@@ -179,5 +188,6 @@ jobs:
             build_status=$status; \
             rust_version=opt\"${{ github.event.inputs.rust_version }}\"; \
             dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
-            optimize_count=${{ github.event.inputs.optimize_count }}:nat8 \
+            optimize_count=${{ github.event.inputs.optimize_count }}:nat8; \
+            canister_type=$canister_type; \
           })"
