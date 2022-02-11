@@ -7,8 +7,38 @@ Cover builder an open internet service that helps build and verify the code of c
 - You can log in with Plug and build your saved configs.
 - Cover will create a verification for your build result. The verification will contain information about your build like build status and build URL for you to see the build process.
 - The hash Cover built will be compared with the one on network IC
+
+## Requirement
+- Same environment with our `Builder` ([dockerfile](https://github.com/Psychedelic/cover-builder/blob/main/dockerfile)).
+- Note that `dfx version` or `rust version` can affect the build result.
+- Must specify `type` field in the `dfx.json` file, we only support `rust` and `motoko`.
+
+Example:
+```
+{
+  "dfx": "0.8.4",
+  "canisters": {
+    "cover": {
+      "candid": "cover.did",
+      "type": "rust",
+      "package": "cover"
+    }
+  }
+}
+```
+- Must have `canister_ids.json` at root directory
+
+Example:
+```
+{
+  "cover": {
+    "ic": "iftvq-niaaa-aaaai-qasga-cai"
+  }
+}
+```
+
 ## Usage
-   - add this Dockerfile to your repo
+   - Add this Dockerfile to your repo
 ```docker
 FROM ubuntu:20.04
 # Install a basic environment needed for our build tools
