@@ -3,6 +3,9 @@
 # Cover builder
 Cover builder is a key component of [Cover](https://covercode.ooo/), the open internet service that helps build and verify the code of canisters on the Internet Computer.
 
+-  [Main Repo](https://github.com/Psychedelic/cover/)
+-  [Cover Validator](https://github.com/Psychedelic/cover-validator/)
+
 ## How it works
 - You will build your wasm and hash it with the Dockerfile we provided to make sure we have the same environment and the hash will come out deterministic.
 - Then you will provide us with the config you used to build your wasm, these inputs will be validated by Cover-validate before Cover proceeds to build or save your config.
