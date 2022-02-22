@@ -62,12 +62,15 @@ jobs:
         run: |
           echo "No DFX found. Start downloading..."
           curl -fsSL https://sdk.dfinity.org/install.sh | bash
+      - name: Check repo visibility
+        if: always()
+        run: |
+          echo "REPO_VISIBILITY=$(curl -H 'Authorization: token ${{ github.event.inputs.repo_access_token }}' 'https://api.github.com/repos/${{ github.event.inputs.repo_url }}' | jq '.visibility')" >> $GITHUB_ENV
       - name: Init Verification
         if: always()
         run: |
           if ! type dfx > /dev/null
           then
-           rm dfx.json
            echo "No DFX found. Start downloading..."
            DFX_VERSION="" sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
           fi
@@ -93,12 +96,13 @@ jobs:
             build_status=variant{ Building }; \
             rust_version=opt\"${{ github.event.inputs.rust_version }}\"; \
             dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
-            optimize_count=${{ github.event.inputs.optimize_count }}:nat8 \
+            optimize_count=${{ github.event.inputs.optimize_count }}:nat8; \
+            repo_visibility=opt$REPO_VISIBILITY; \
           })"
       - name: Clone github repo
         run: |
           git init
-          git remote add origin https://${{ github.event.inputs.repo_access_token }}@${{ github.event.inputs.repo_url }}
+          git remote add origin https://${{ github.event.inputs.repo_access_token }}@github.com/${{ github.event.inputs.repo_url }}
           git fetch origin ${{ github.event.inputs.commit_hash }} --depth 1
           git reset --hard FETCH_HEAD
       - name: Validate dfx build type
@@ -190,4 +194,5 @@ jobs:
             dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
             optimize_count=${{ github.event.inputs.optimize_count }}:nat8; \
             canister_type=$canister_type; \
+            repo_visibility=opt$REPO_VISIBILITY; \
           })"
