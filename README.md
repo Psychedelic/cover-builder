@@ -1,5 +1,7 @@
+![](https://docs.covercode.ooo/overview/imgs/mainn.png)
+
 # Cover builder
-Cover builder an open internet service that helps build and verify the code of canisters on the Internet Computer.
+Cover builder is a key component of [Cover](https://covercode.ooo/), the open internet service that helps build and verify the code of canisters on the Internet Computer.
 
 ## How it works
 - You will build your wasm and hash it with the Dockerfile we provided to make sure we have the same environment and the hash will come out deterministic.
