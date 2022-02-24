@@ -47,7 +47,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: namdh2604/cover
+    container: psychedelichq/cover
     steps:
       - name: Cache DFX
         id: cache-dfx
