@@ -1,8 +1,8 @@
-FROM ubuntu:20.04
+FROM --platform=linux/amd64 ubuntu:20.04
 
 # Install a basic environment needed for our build tools
 ARG DEBIAN_FRONTEND=noninteractive
 RUN \
     apt -yq update && \
     apt -yqq install --no-install-recommends curl ca-certificates \
-        build-essential pkg-config libssl-dev llvm-dev liblmdb-dev clang cmake git
+        build-essential pkg-config libssl-dev llvm-dev liblmdb-dev clang cmake git jq
