@@ -14,11 +14,13 @@ Cover builder is a key component of [Cover](https://covercode.ooo/), the open in
 - The hash Cover built will be compared with the one on network IC
 
 ## Requirement
+- ***Cover only support DFX 0.8.4 or above***
 - Same environment with our `Builder` ([dockerfile](https://github.com/Psychedelic/cover-builder/blob/main/dockerfile)).
 - Note that `dfx version` or `rust version` can affect the build result.
 - Must specify `type` field in the `dfx.json` file, we only support `rust` and `motoko`.
+- Cover validator and builder will update the build status for you to follow. You can only re-build your canister when the Cover builder finishes its job and updates the status to either Error or Success. If the Cover builder failed to update build status, you’ll have to wait **5 minutes** before rebuilding your canister. So make sure to fill your inputs correctly.
 
-Example:
+  Example:
 ```
 {
   "dfx": "0.8.4",
