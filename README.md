@@ -47,7 +47,7 @@ Example:
 ## Usage
    - Add this Dockerfile to your repo
 ```docker
-FROM ubuntu:20.04
+FROM --platform=linux/amd64 ubuntu:20.04
 # Install a basic environment needed for our build tools
 ARG DEBIAN_FRONTEND=noninteractive
 RUN \
