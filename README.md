@@ -1,27 +1,38 @@
 ![](https://docs.covercode.ooo/overview/imgs/mainn.png)
 
 # Cover builder
-Cover builder is a key component of [Cover](https://covercode.ooo/), the open internet service that helps build and verify the code of canisters on the Internet Computer.
 
--  [Main Repo](https://github.com/Psychedelic/cover/)
--  [Cover Validator](https://github.com/Psychedelic/cover-validator/)
+Cover builder is a key component of [Cover](https://covercode.ooo/), the open internet service that helps build and
+verify the code of canisters on the Internet Computer.
+
+- [Main Repo](https://github.com/Psychedelic/cover/)
+- [Cover Validator](https://github.com/Psychedelic/cover-validator/)
 
 ## How it works
-- You will build your wasm and hash it with the Dockerfile we provided to make sure we have the same environment and the hash will come out deterministic.
-- Then you will provide us with the config you used to build your wasm, these inputs will be validated by Cover-validate before Cover proceeds to build or save your config.
+
+- You will build your wasm and hash it with the Dockerfile we provided to make sure we have the same environment and the
+  hash will come out deterministic.
+- Then you will provide us with the config you used to build your wasm, these inputs will be validated by Cover-validate
+  before Cover proceeds to build or save your config.
 - You can log in with Plug and build your saved configs.
-- Cover will create a verification for your build result. The verification will contain information about your build like build status and build URL for you to see the build process.
+- Cover will create a verification for your build result. The verification will contain information about your build
+  like build status and build URL for you to see the build process.
 - The hash Cover built will be compared with the one on network IC
 
 ## Requirement
+
 - ***Cover only support DFX 0.8.4 or above***
 - Same environment with our `Builder` ([dockerfile](https://github.com/Psychedelic/cover-builder/blob/main/dockerfile)).
 - Note that `dfx version` or `rust version` can affect the build result.
 - Must specify `type` field in the `dfx.json` file, we only support `rust` and `motoko`.
-- Cover validator and builder will update the build status for you to follow. You can only re-build your canister when the Cover builder finishes its job and updates the status to either Error or Success. If the Cover builder failed to update build status, you’ll have to wait **5 minutes** before rebuilding your canister. So make sure to fill your inputs correctly.
+- Cover validator and builder will update the build status for you to follow. You can only re-build your canister when
+  the Cover builder finishes its job and updates the status to either Error or Success. If the Cover builder failed to
+  update build status, you’ll have to wait **5 minutes** before rebuilding your canister. So make sure to fill your
+  inputs correctly.
 
   Example:
-```
+
+```json
 {
   "dfx": "0.8.4",
   "canisters": {
@@ -33,10 +44,12 @@ Cover builder is a key component of [Cover](https://covercode.ooo/), the open in
   }
 }
 ```
+
 - Must have `canister_ids.json` at root directory
 
 Example:
-```
+
+```json
 {
   "cover": {
     "ic": "iftvq-niaaa-aaaai-qasga-cai"
@@ -45,8 +58,10 @@ Example:
 ```
 
 ## Usage
-   - Add this Dockerfile to your repo
-```docker
+
+- Add this Dockerfile to your repo
+
+```dockerfile
 FROM --platform=linux/amd64 ubuntu:20.04
 # Install a basic environment needed for our build tools
 ARG DEBIAN_FRONTEND=noninteractive
@@ -71,8 +86,8 @@ RUN cargo install ic-cdk-optimizer
 ENV DFX_VERSION=0.8.4
 RUN sh -ci "$(curl -fsSL https://sdk.dfinity.org/install.sh)"
 
-# OR mount volumne
 # COPY . /canister
+# OR mount volumne
 
 WORKDIR /canister
 
@@ -82,34 +97,50 @@ WORKDIR /canister
 #             -o .dfx/ic/canisters/<your_canister_name>/<your_canister_name>.wasm
 # RUN openssl dgst -sha256 .dfx/ic/canisters/<your_canister_name>/<your_canister_name>.wasm | awk '/.+$/{print "0x"$2}' > wasm_hash
 ```
+
 - Build docker image
+
 ```bash
 $ docker build -t DOCKER_IMAGE_NAME -f DOCKERFILE_PATH .
 ```
+
 - Run docker image and build your wasm
+
 ```bash
 $ docker run -it DOCKER_IMAGE_NAME
 
->>> dfx build --network ic YOUR_CANISTER_NAME
->>> ic-cdk-optimizer YOUR_IN_WASM.wasm -o YOUR_OUT_WASM.wasm
+# Bind mount example
+$ docker run -it --mount type=bind,source="$(pwd)",target=/canister YOUR_CANISTER_NAME
 
-# To deploy and verify your canister wasm hash
->>> dfx canister --network ic install YOUR_CANISTER_NAME
->>> dfx canister --network ic info YOUR_CANISTER_NAME
+$ dfx build --network ic YOUR_CANISTER_NAME
+$ ic-cdk-optimizer YOUR_IN_WASM.wasm -o YOUR_OUT_WASM.wasm
 
-# To verify your local wasm hash
+# To deploy and check your canister wasm hash
+$ dfx canister --network ic install YOUR_CANISTER_NAME
+$ dfx canister --network ic info YOUR_CANISTER_NAME
+
+# To see your local wasm hash
 $ openssl dgst -sha256 YOUR_WASM | awk '{print $2}'
 
 ```
-- Verify your wasm hash with Cover
-  - **Method 1**: Go to [Cover site]().
-    - To immediately build your config, choose Build then input the field correctly.
-    - To build and save your config for later use, log in with Plug, choose Save build config, and inputs required fields. Save and choose a config to build
-    - After cover builds your wasm, the hash and the status of the build process will be updated to your verification.
-    - You can check out the Build URL field of the verification to see what went wrong with the build process if it failed.
-  - **Method 2**: Use API.
-    - You can use the API provided by [Cover-validator](https://github.com/Psychedelic/cover-validator) to validate and build your wasm
-    - After that you can use this command to check your verification (it may take a while to build wasm and update your verification):
+
+- Check your Cover's verification
+    - **Method 1**: Use Cover SDK
+        - Document and example can be found [here](https://github.com/Psychedelic/cover-sdk)
+    - **Method 2**: Go to [Cover site]().
+        - To immediately build your config, choose Build then input the field correctly.
+        - To build and save your config for later use, log in with Plug, choose Save build config, and inputs required
+          fields. Save and choose a config to build
+        - After cover builds your wasm, the hash and the status of the build process will be updated to your
+          verification.
+        - You can check out the Build URL field of the verification to see what went wrong with the build process if it
+          failed.
+    - **Method 3**: Use API.
+        - You can use the API provided by [Cover-validator](https://github.com/Psychedelic/cover-validator) to validate
+          and build your wasm
+        - After that you can use this command to check your verification (it may take a while to build wasm and update
+          your verification):
+
 ```bash
 $  dfx canister --network ic call COVER_CANISTER_ID \
         getVerificationByCanisterId '(principal"YOUR_CANISTER_ID")'
