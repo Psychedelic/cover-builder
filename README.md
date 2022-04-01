@@ -112,16 +112,20 @@ $ docker run -it DOCKER_IMAGE_NAME
 # Bind mount example
 $ docker run -it --mount type=bind,source="$(pwd)",target=/canister YOUR_CANISTER_NAME
 
+# Build your canister
 $ dfx build --network ic YOUR_CANISTER_NAME
+
+# Run optimizer
 $ ic-cdk-optimizer YOUR_IN_WASM.wasm -o YOUR_OUT_WASM.wasm
 
-# To deploy and check your canister wasm hash
+# Deploy
 $ dfx canister --network ic install YOUR_CANISTER_NAME
+
+# Check wasm hash on IC
 $ dfx canister --network ic info YOUR_CANISTER_NAME
 
 # To see your local wasm hash
 $ openssl dgst -sha256 YOUR_WASM | awk '{print $2}'
-
 ```
 
 - Check your Cover's verification
