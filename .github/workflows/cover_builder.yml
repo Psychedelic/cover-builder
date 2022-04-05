@@ -97,7 +97,7 @@ jobs:
             canister_name=\"${{ github.event.inputs.canister_name }}\"; \
             repo_url=\"${{ github.event.inputs.repo_url }}\"; \
             commit_hash=\"${{ github.event.inputs.commit_hash }}\"; \
-            build_url=\"https://github.com/Psychedelic/cover/actions/runs/${{github.run_id}}\"; \
+            build_url=\"https://github.com/Psychedelic/cover-builder/actions/runs/${{github.run_id}}\"; \
             build_status=variant{ Building }; \
             rust_version=opt\"${{ github.event.inputs.rust_version }}\"; \
             dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
@@ -203,7 +203,7 @@ jobs:
             repo_url=\"${{ github.event.inputs.repo_url }}\"; \
             commit_hash=\"${{ github.event.inputs.commit_hash }}\"; \
             wasm_hash=$hash; \
-            build_url=\"https://github.com/Psychedelic/cover/actions/runs/${{github.run_id}}\"; \
+            build_url=\"https://github.com/Psychedelic/cover-builder/actions/runs/${{github.run_id}}\"; \
             build_status=$status; \
             rust_version=opt\"${{ github.event.inputs.rust_version }}\"; \
             dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
