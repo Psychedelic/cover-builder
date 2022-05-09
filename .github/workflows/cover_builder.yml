@@ -46,7 +46,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     container: psychedelichq/cover
     steps:
       - name: Cache DFX
@@ -67,7 +67,7 @@ jobs:
       - name: Check repo visibility
         if: always()
         run: |
-          REPO_VISIBILITY=$(curl -H 'Authorization: token ${{ github.event.inputs.repo_access_token }}' 'https://api.github.com/repos/${{ github.event.inputs.repo_url }}' | jq '.visibility' | tr -d '""') 
+          REPO_VISIBILITY=$(curl -H 'Authorization: token ${{ github.event.inputs.repo_access_token }}' 'https://api.github.com/repos/${{ github.event.inputs.repo_url }}' | jq '.visibility' | tr -d '""')
           echo "REPO_VISIBILITY=$REPO_VISIBILITY" >> $GITHUB_ENV
 
       - name: Init Verification
