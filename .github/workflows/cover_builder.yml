@@ -114,7 +114,7 @@ jobs:
 
       - name: Validate dfx build type
         run: |
-          CANISTER_TYPE=$(jq '.canisters.${{ github.event.inputs.canister_name }}.type' < dfx.json)
+          CANISTER_TYPE=$(jq '.canisters."${{ github.event.inputs.canister_name }}".type' < dfx.json)
           case $CANISTER_TYPE in
             (\"rust\" | \"motoko\")
               CANISTER_TYPE="$(echo ${CANISTER_TYPE} | tr -d '"')"
