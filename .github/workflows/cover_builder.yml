@@ -47,6 +47,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
+    defaults:
+      run:
+        shell: bash
     container: psychedelichq/cover
     steps:
       - name: Cache DFX
@@ -70,7 +73,7 @@ jobs:
           REPO_VISIBILITY=$(curl -H 'Authorization: token ${{ github.event.inputs.repo_access_token }}' 'https://api.github.com/repos/${{ github.event.inputs.repo_url }}' | jq '.visibility' | tr -d '""')
           echo "REPO_VISIBILITY=$REPO_VISIBILITY" >> $GITHUB_ENV
 
-      - name: Init Verification
+      - name: Init Builder Identity
         if: always()
         run: |
           echo "{}" > dfx.json
@@ -88,8 +91,18 @@ jobs:
             CANISTER_ID="iftvq-niaaa-aaaai-qasga-cai"
           fi
           echo "CANISTER_ID=${CANISTER_ID}" >> $GITHUB_ENV
-          dfx identity import cover identity.pem
+          # version checking 1.xx.*
+          if [[ "${{ github.event.inputs.dfx_version }}" =~ ^[0-9]+\.[0-9][0-9]+\.[0-9]+$ ]]
+          then
+            dfx identity import --disable-encryption cover identity.pem
+          else
+            dfx identity import cover identity.pem
+          fi
           dfx identity use cover
+
+      - name: Init Verification
+        if: always()
+        run: |
           dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
             owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
