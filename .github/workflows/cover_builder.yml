@@ -181,7 +181,7 @@ jobs:
           key: Ubuntu-ic-cdk-optimizer-version-${{ github.event.inputs.rust_version }}
 
       - name: Install optimizer
-        if: github.event.inputs.rust_version != '' && steps.cache-ic-cdk-optimizer.outputs.cache-hit != 'true'
+        if: github.event.inputs.optimize_count > 0 && github.event.inputs.rust_version != '' && steps.cache-ic-cdk-optimizer.outputs.cache-hit != 'true'
         run: cargo install ic-cdk-optimizer
 
       - name: Optimize wasm
