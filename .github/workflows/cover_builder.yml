@@ -155,6 +155,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: |
+            /opt/cargo/bin/cargo
             /opt/cargo/registry/index/
             /opt/cargo/registry/cache/
             /opt/cargo/git/db/
@@ -183,11 +184,12 @@ jobs:
         run: dfx build --network ic ${{ github.event.inputs.canister_name }}
 
       - name: Cache ic-cdk-optimizer
+        if: github.event.inputs.optimize_count > 0 && github.event.inputs.rust_version != ''
         id: cache-ic-cdk-optimizer
         uses: actions/cache@v2
         with:
           path: /opt/cargo/bin/ic-cdk-optimizer
-          key: Ubuntu-ic-cdk-optimizer-version-${{ github.event.inputs.rust_version }}
+          key: Ubuntu-ic-cdk-optimizer-rust-version-${{ github.event.inputs.rust_version }}
 
       - name: Install optimizer
         if: github.event.inputs.optimize_count > 0 && github.event.inputs.rust_version != '' && steps.cache-ic-cdk-optimizer.outputs.cache-hit != 'true'
