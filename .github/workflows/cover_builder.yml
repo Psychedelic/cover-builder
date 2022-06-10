@@ -156,6 +156,7 @@ jobs:
         with:
           path: |
             /opt/cargo/bin/cargo
+            /opt/cargo/bin/rustc
             /opt/cargo/registry/index/
             /opt/cargo/registry/cache/
             /opt/cargo/git/db/
