@@ -70,8 +70,11 @@ jobs:
       - name: Check repo visibility
         if: always()
         run: |
-          REPO_VISIBILITY=$(curl -H 'Authorization: token ${{ github.event.inputs.repo_access_token }}' 'https://api.github.com/repos/${{ github.event.inputs.repo_url }}' | jq '.visibility' | tr -d '""')
-          echo "REPO_VISIBILITY=$REPO_VISIBILITY" >> $GITHUB_ENV
+          REPO_VISIBILITY=private
+          if [ -z ${{ github.event.inputs.repo_access_token }} ]
+          then
+            REPO_VISIBILITY=public
+          fi
 
       - name: Init Builder Identity
         if: always()
@@ -121,7 +124,12 @@ jobs:
       - name: Clone github repo
         run: |
           git init
-          git remote add origin https://${{ github.event.inputs.repo_access_token }}@github.com/${{ github.event.inputs.repo_url }}
+          if [ -z ${{ github.event.inputs.repo_access_token }} ]
+          then 
+            git remote add origin https://github.com/${{ github.event.inputs.repo_url }}
+          else
+            git remote add origin https://${{ github.event.inputs.repo_access_token }}@github.com/${{ github.event.inputs.repo_url }}
+          fi
           git fetch origin ${{ github.event.inputs.commit_hash }} --depth 1
           git reset --hard FETCH_HEAD
 
