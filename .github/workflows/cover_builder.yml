@@ -21,7 +21,7 @@ on:
         type: string
       repo_access_token:
         description: 'Repo access token'
-        required: true
+        required: false
         type: string
       commit_hash:
         description: 'Repo commit hash'
@@ -75,6 +75,7 @@ jobs:
           then
             REPO_VISIBILITY=public
           fi
+          echo "REPO_VISIBILITY=$REPO_VISIBILITY" >> $GITHUB_ENV
 
       - name: Init Builder Identity
         if: always()
