@@ -126,7 +126,7 @@ jobs:
         run: |
           git init
           if [ -z ${{ github.event.inputs.repo_access_token }} ]
-          then 
+          then
             git remote add origin https://github.com/${{ github.event.inputs.repo_url }}
           else
             git remote add origin https://${{ github.event.inputs.repo_access_token }}@github.com/${{ github.event.inputs.repo_url }}
@@ -157,6 +157,7 @@ jobs:
           path: |
             /opt/cargo/bin/cargo
             /opt/cargo/bin/rustc
+            /opt/cargo/bin/rustup
             /opt/cargo/registry/index/
             /opt/cargo/registry/cache/
             /opt/cargo/git/db/
