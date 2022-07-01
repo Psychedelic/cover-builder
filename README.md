@@ -21,7 +21,8 @@ verify the code of canisters on the Internet Computer.
 
 ## Requirement
 
-- ***Cover only support DFX 0.8.4 or above***
+- **_Cover only support DFX 0.8.4 or above_**
+- If you're using DFX 0.9.3 and above, when you build your wasm, DFX might automatically optimize the wasm for you, so beware of that when input the`optimizeCount`
 - Same environment with our `Builder` ([dockerfile](https://github.com/Psychedelic/cover-builder/blob/main/dockerfile)).
 - Note that `dfx version` or `rust version` can affect the build result.
 - Must specify `type` field in the `dfx.json` file, we only support `rust` and `motoko`.
