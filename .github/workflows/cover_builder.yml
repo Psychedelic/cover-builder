@@ -3,8 +3,8 @@ name: Cover build
 on:
   workflow_dispatch:
     inputs:
-      owner_id:
-        description: 'Owner id'
+      owner_id_and_delegate_canister_id:
+        description: 'Owner id and delegate canister id'
         required: true
         type: string
       canister_id:
@@ -52,6 +52,14 @@ jobs:
         shell: bash
     container: psychedelichq/cover
     steps:
+      # validated by cover-validator
+      - name: Parse canister info
+        run: |
+          OWNER_ID=$(echo ${{ github.event.inputs.owner_id_and_delegate_canister_id }} | cut -d ";" -f 1)
+          DELEGATE_CANISTER_ID=$(echo ${{ github.event.inputs.owner_id_and_delegate_canister_id }} | cut -d ";" -f 2)
+          echo "OWNER_ID=$OWNER_ID" >> $GITHUB_ENV
+          echo "DELEGATE_CANISTER_ID=$DELEGATE_CANISTER_ID" >> $GITHUB_ENV
+
       - name: Cache DFX
         id: cache-dfx
         uses: actions/cache@v2
@@ -67,10 +75,11 @@ jobs:
           echo "No DFX found. Start downloading..."
           curl -fsSL https://sdk.dfinity.org/install.sh | bash
 
+      # validated by cover-validator
       - name: Check repo visibility
         if: always()
         run: |
-          REPO_VISIBILITY=private
+          REPO_VISIBILITY="not public"
           if [ -z ${{ github.event.inputs.repo_access_token }} ]
           then
             REPO_VISIBILITY=public
@@ -95,7 +104,7 @@ jobs:
             CANISTER_ID="iftvq-niaaa-aaaai-qasga-cai"
           fi
           echo "CANISTER_ID=${CANISTER_ID}" >> $GITHUB_ENV
-          # version checking 1.xx.*
+          # version checking
           if [[ "${{ github.event.inputs.dfx_version }}" =~ ^[0-9]+\.[0-9][0-9]+\.[0-9]+$ ]]
           then
             dfx identity import --disable-encryption cover identity.pem
@@ -215,18 +224,22 @@ jobs:
       - name: Update verification
         if: always()
         run: |
-          hash=opt\"$WASM_HASH\"
-          if [ -z "$WASM_HASH" ]
-          then
+          if [ -z "$WASM_HASH" ]; then
             status="variant{ Error }"
           else
             status="variant{ Success }"
           fi
+
+          wasm_hash=null
+          if [ ! -z "$WASM_HASH" ]; then
+            wasm_hash="opt\"$WASM_HASH\""
+          fi
+
           canister_type=null
-          if [ ! -z "$CANISTER_TYPE" ]
-          then
+          if [ ! -z "$CANISTER_TYPE" ]; then
             canister_type="opt variant{ $CANISTER_TYPE }"
           fi
+
           dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
             owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
@@ -234,7 +247,7 @@ jobs:
             canister_name=\"${{ github.event.inputs.canister_name }}\"; \
             repo_url=\"${{ github.event.inputs.repo_url }}\"; \
             commit_hash=\"${{ github.event.inputs.commit_hash }}\"; \
-            wasm_hash=$hash; \
+            wasm_hash=$wasm_hash; \
             build_url=\"https://github.com/Psychedelic/cover-builder/actions/runs/${{github.run_id}}\"; \
             build_status=$status; \
             rust_version=opt\"${{ github.event.inputs.rust_version }}\"; \
