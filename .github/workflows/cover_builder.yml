@@ -15,8 +15,8 @@ on:
         description: 'Canister name'
         required: true
         type: string
-      repo_url:
-        description: 'Repo url'
+      repo_url_and_visibility:
+        description: 'Repo url and visibility'
         required: true
         type: string
       repo_access_token:
@@ -55,10 +55,18 @@ jobs:
       # validated by cover-validator
       - name: Parse canister info
         run: |
-          OWNER_ID=$(echo ${{ github.event.inputs.owner_id_and_delegate_canister_id }} | cut -d ";" -f 1)
-          DELEGATE_CANISTER_ID=$(echo ${{ github.event.inputs.owner_id_and_delegate_canister_id }} | cut -d ";" -f 2)
+          OWNER_ID=$(echo ${{ github.event.inputs.owner_id_and_delegate_canister_id }} | cut -d "|" -f 1)
+          DELEGATE_CANISTER_ID=$(echo ${{ github.event.inputs.owner_id_and_delegate_canister_id }} | cut -d "|" -f 2)
           echo "OWNER_ID=$OWNER_ID" >> $GITHUB_ENV
           echo "DELEGATE_CANISTER_ID=$DELEGATE_CANISTER_ID" >> $GITHUB_ENV
+
+      # validated by cover-validator
+      - name: Parse canister info
+        run: |
+          REPO_URL=$(echo ${{ github.event.inputs.repo_url_and_visibility }} | cut -d "|" -f 1)
+          REPO_VISIBILITY=$(echo ${{ github.event.inputs.repo_url_and_visibility }} | cut -d "|" -f 2)
+          echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
+          echo "REPO_VISIBILITY=${REPO_VISIBILITY}" >> $GITHUB_ENV
 
       - name: Cache DFX
         id: cache-dfx
@@ -74,17 +82,6 @@ jobs:
         run: |
           echo "No DFX found. Start downloading..."
           curl -fsSL https://sdk.dfinity.org/install.sh | bash
-
-      # validated by cover-validator
-      - name: Check repo visibility
-        if: always()
-        run: |
-          REPO_VISIBILITY="not public"
-          if [ -z ${{ github.event.inputs.repo_access_token }} ]
-          then
-            REPO_VISIBILITY=public
-          fi
-          echo "REPO_VISIBILITY=$REPO_VISIBILITY" >> $GITHUB_ENV
 
       - name: Init Builder Identity
         if: always()
@@ -121,14 +118,14 @@ jobs:
             owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
             canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
             canister_name=\"${{ github.event.inputs.canister_name }}\"; \
-            repo_url=\"${{ github.event.inputs.repo_url }}\"; \
+            repo_url=\"${REPO_URL}\"; \
             commit_hash=\"${{ github.event.inputs.commit_hash }}\"; \
             build_url=\"https://github.com/Psychedelic/cover-builder/actions/runs/${{github.run_id}}\"; \
             build_status=variant{ Building }; \
             rust_version=opt\"${{ github.event.inputs.rust_version }}\"; \
             dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
             optimize_count=${{ github.event.inputs.optimize_count }}:nat8; \
-            repo_visibility=opt\"$REPO_VISIBILITY\"; \
+            repo_visibility=opt\"${REPO_VISIBILITY}\"; \
           })"
 
       - name: Clone github repo
@@ -136,9 +133,9 @@ jobs:
           git init
           if [ -z ${{ github.event.inputs.repo_access_token }} ]
           then
-            git remote add origin https://github.com/${{ github.event.inputs.repo_url }}
+            git remote add origin https://github.com/${REPO_URL}
           else
-            git remote add origin https://${{ github.event.inputs.repo_access_token }}@github.com/${{ github.event.inputs.repo_url }}
+            git remote add origin https://${{ github.event.inputs.repo_access_token }}@github.com/${REPO_URL}
           fi
           git fetch origin ${{ github.event.inputs.commit_hash }} --depth 1
           git reset --hard FETCH_HEAD
@@ -245,7 +242,7 @@ jobs:
             owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
             canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
             canister_name=\"${{ github.event.inputs.canister_name }}\"; \
-            repo_url=\"${{ github.event.inputs.repo_url }}\"; \
+            repo_url=\"${REPO_URL}\"; \
             commit_hash=\"${{ github.event.inputs.commit_hash }}\"; \
             wasm_hash=$wasm_hash; \
             build_url=\"https://github.com/Psychedelic/cover-builder/actions/runs/${{github.run_id}}\"; \
@@ -254,5 +251,5 @@ jobs:
             dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
             optimize_count=${{ github.event.inputs.optimize_count }}:nat8; \
             canister_type=$canister_type; \
-            repo_visibility=opt\"$REPO_VISIBILITY\"; \
+            repo_visibility=opt\"${REPO_VISIBILITY}\"; \
           })"
