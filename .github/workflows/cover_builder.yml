@@ -257,7 +257,7 @@ jobs:
 
           dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
-            owner_id=principal\"${CANISTER_ID}\"; \
+            owner_id=principal\"${OWNER_ID}\"; \
             delegate_canister_id=${DELEGATE_CANISTER_ID}; \
             canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
             canister_name=\"${{ github.event.inputs.canister_name }}\"; \
