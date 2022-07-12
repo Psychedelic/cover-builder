@@ -56,8 +56,8 @@ jobs:
       - name: Parse canister info
         if: always()
         run: |
-          OWNER_ID=$(echo ${{ github.event.inputs.owner_id_and_delegate_canister_id }} | cut -d "|" -f 1)
-          DELEGATE_CANISTER_ID=$(echo ${{ github.event.inputs.owner_id_and_delegate_canister_id }} | cut -d "|" -f 2)
+          OWNER_ID=$(echo "${{ github.event.inputs.owner_id_and_delegate_canister_id }}" | cut -d "|" -f 1)
+          DELEGATE_CANISTER_ID=$(echo "${{ github.event.inputs.owner_id_and_delegate_canister_id }}" | cut -d "|" -f 2)
           if [[ -z ${DELEGATE_CANISTER_ID} ]]; then
             DELEGATE_CANISTER_ID=null
           else
@@ -70,8 +70,8 @@ jobs:
       - name: Parse repo info
         if: always()
         run: |
-          REPO_URL=$(echo ${{ github.event.inputs.repo_url_and_visibility }} | cut -d "|" -f 1)
-          REPO_VISIBILITY=$(echo ${{ github.event.inputs.repo_url_and_visibility }} | cut -d "|" -f 2)
+          REPO_URL=$(echo "${{ github.event.inputs.repo_url_and_visibility }}" | cut -d "|" -f 1)
+          REPO_VISIBILITY=$(echo "${{ github.event.inputs.repo_url_and_visibility }}" | cut -d "|" -f 2)
           echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
           echo "REPO_VISIBILITY=${REPO_VISIBILITY}" >> $GITHUB_ENV
 
