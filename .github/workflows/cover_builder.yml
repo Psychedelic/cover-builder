@@ -3,8 +3,8 @@ name: Cover build
 on:
   workflow_dispatch:
     inputs:
-      owner_id:
-        description: 'Owner id'
+      owner_id_and_delegate_canister_id:
+        description: 'Owner id and delegate canister id'
         required: true
         type: string
       canister_id:
@@ -15,8 +15,8 @@ on:
         description: 'Canister name'
         required: true
         type: string
-      repo_url:
-        description: 'Repo url'
+      repo_url_and_visibility:
+        description: 'Repo url and visibility'
         required: true
         type: string
       repo_access_token:
@@ -52,6 +52,39 @@ jobs:
         shell: bash
     container: psychedelichq/cover
     steps:
+      # validated by cover-validator
+      - name: Parse canister info
+        if: always()
+        run: |
+          OWNER_ID=$(echo "${{ github.event.inputs.owner_id_and_delegate_canister_id }}" | cut -d "|" -f 1)
+          DELEGATE_CANISTER_ID=$(echo "${{ github.event.inputs.owner_id_and_delegate_canister_id }}" | cut -d "|" -f 2)
+          if [[ -z ${DELEGATE_CANISTER_ID} ]]; then
+            DELEGATE_CANISTER_ID=null
+          else
+            DELEGATE_CANISTER_ID="opt principal\"${DELEGATE_CANISTER_ID}\""
+          fi
+          echo "OWNER_ID=${OWNER_ID}" >> $GITHUB_ENV
+          echo "DELEGATE_CANISTER_ID=${DELEGATE_CANISTER_ID}" >> $GITHUB_ENV
+
+      # validated by cover-validator
+      - name: Parse repo info
+        if: always()
+        run: |
+          REPO_URL=$(echo "${{ github.event.inputs.repo_url_and_visibility }}" | cut -d "|" -f 1)
+          REPO_VISIBILITY=$(echo "${{ github.event.inputs.repo_url_and_visibility }}" | cut -d "|" -f 2)
+          echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
+          echo "REPO_VISIBILITY=${REPO_VISIBILITY}" >> $GITHUB_ENV
+
+      # validated by cover-validator
+      - name: Parse rust version info
+        if: always()
+        run: |
+          RUST_VERSION_RESULT=null
+          if [[ ! -z ${{ github.event.inputs.rust_version }} ]]; then
+            RUST_VERSION_RESULT="opt\"${{ github.event.inputs.rust_version }}\""
+          fi
+          echo "RUST_VERSION_RESULT=${RUST_VERSION_RESULT}" >> $GITHUB_ENV
+
       - name: Cache DFX
         id: cache-dfx
         uses: actions/cache@v2
@@ -66,16 +99,6 @@ jobs:
         run: |
           echo "No DFX found. Start downloading..."
           curl -fsSL https://sdk.dfinity.org/install.sh | bash
-
-      - name: Check repo visibility
-        if: always()
-        run: |
-          REPO_VISIBILITY=private
-          if [ -z ${{ github.event.inputs.repo_access_token }} ]
-          then
-            REPO_VISIBILITY=public
-          fi
-          echo "REPO_VISIBILITY=$REPO_VISIBILITY" >> $GITHUB_ENV
 
       - name: Init Builder Identity
         if: always()
@@ -95,7 +118,7 @@ jobs:
             CANISTER_ID="iftvq-niaaa-aaaai-qasga-cai"
           fi
           echo "CANISTER_ID=${CANISTER_ID}" >> $GITHUB_ENV
-          # version checking 1.xx.*
+          # version checking
           if [[ "${{ github.event.inputs.dfx_version }}" =~ ^[0-9]+\.[0-9][0-9]+\.[0-9]+$ ]]
           then
             dfx identity import --disable-encryption cover identity.pem
@@ -109,17 +132,18 @@ jobs:
         run: |
           dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
-            owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
+            owner_id=principal\"${OWNER_ID}\"; \
+            delegate_canister_id=${DELEGATE_CANISTER_ID}; \
             canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
             canister_name=\"${{ github.event.inputs.canister_name }}\"; \
-            repo_url=\"${{ github.event.inputs.repo_url }}\"; \
+            repo_url=\"${REPO_URL}\"; \
             commit_hash=\"${{ github.event.inputs.commit_hash }}\"; \
             build_url=\"https://github.com/Psychedelic/cover-builder/actions/runs/${{github.run_id}}\"; \
             build_status=variant{ Building }; \
-            rust_version=opt\"${{ github.event.inputs.rust_version }}\"; \
+            rust_version=${RUST_VERSION_RESULT}; \
             dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
             optimize_count=${{ github.event.inputs.optimize_count }}:nat8; \
-            repo_visibility=opt\"$REPO_VISIBILITY\"; \
+            repo_visibility=\"${REPO_VISIBILITY}\"; \
           })"
 
       - name: Clone github repo
@@ -127,9 +151,9 @@ jobs:
           git init
           if [ -z ${{ github.event.inputs.repo_access_token }} ]
           then
-            git remote add origin https://github.com/${{ github.event.inputs.repo_url }}
+            git remote add origin https://github.com/${REPO_URL}
           else
-            git remote add origin https://${{ github.event.inputs.repo_access_token }}@github.com/${{ github.event.inputs.repo_url }}
+            git remote add origin https://${{ github.event.inputs.repo_access_token }}@github.com/${REPO_URL}
           fi
           git fetch origin ${{ github.event.inputs.commit_hash }} --depth 1
           git reset --hard FETCH_HEAD
@@ -215,31 +239,36 @@ jobs:
       - name: Update verification
         if: always()
         run: |
-          hash=opt\"$WASM_HASH\"
-          if [ -z "$WASM_HASH" ]
-          then
-            status="variant{ Error }"
+          if [ -z "$WASM_HASH" ]; then
+            BUILD_STATUS="variant{ Error }"
           else
-            status="variant{ Success }"
+            BUILD_STATUS="variant{ Success }"
           fi
-          canister_type=null
-          if [ ! -z "$CANISTER_TYPE" ]
-          then
-            canister_type="opt variant{ $CANISTER_TYPE }"
+
+          WASM_HASH_RESULT=null
+          if [ ! -z "$WASM_HASH" ]; then
+            WASM_HASH_RESULT="opt\"$WASM_HASH\""
           fi
+
+          CANISTER_TYPE_RESULT=null
+          if [ ! -z "$CANISTER_TYPE" ]; then
+            CANISTER_TYPE_RESULT="opt variant{ $CANISTER_TYPE }"
+          fi
+
           dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
-            owner_id=principal\"${{ github.event.inputs.owner_id }}\"; \
+            owner_id=principal\"${OWNER_ID}\"; \
+            delegate_canister_id=${DELEGATE_CANISTER_ID}; \
             canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
             canister_name=\"${{ github.event.inputs.canister_name }}\"; \
-            repo_url=\"${{ github.event.inputs.repo_url }}\"; \
+            repo_url=\"${REPO_URL}\"; \
             commit_hash=\"${{ github.event.inputs.commit_hash }}\"; \
-            wasm_hash=$hash; \
+            wasm_hash=${WASM_HASH_RESULT}; \
             build_url=\"https://github.com/Psychedelic/cover-builder/actions/runs/${{github.run_id}}\"; \
-            build_status=$status; \
-            rust_version=opt\"${{ github.event.inputs.rust_version }}\"; \
+            build_status=${BUILD_STATUS}; \
+            rust_version=${RUST_VERSION_RESULT}; \
             dfx_version=\"${{ github.event.inputs.dfx_version }}\"; \
             optimize_count=${{ github.event.inputs.optimize_count }}:nat8; \
-            canister_type=$canister_type; \
-            repo_visibility=opt\"$REPO_VISIBILITY\"; \
+            canister_type=${CANISTER_TYPE_RESULT}; \
+            repo_visibility=\"${REPO_VISIBILITY}\"; \
           })"
