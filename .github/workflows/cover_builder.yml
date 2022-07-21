@@ -162,11 +162,10 @@ jobs:
         run: |
           CANISTER_TYPE=$(jq '.canisters."${{ github.event.inputs.canister_name }}".type' < dfx.json)
           case $CANISTER_TYPE in
-            (\"rust\" | \"motoko\")
+            (\"rust\" | \"motoko\" | \"custom\")
               CANISTER_TYPE="$(echo ${CANISTER_TYPE} | tr -d '"')"
               CANISTER_TYPE="$(echo ${CANISTER_TYPE} | awk '{ print toupper(substr($0, 1, 1)) substr($0, 2) }')"
               echo "CANISTER_TYPE=$CANISTER_TYPE" >> $GITHUB_ENV
-              echo "Passed"
               ;;
             (*)
               echo "Only support DFX build type \"rust\" or \"motoko\""
