@@ -23,10 +23,10 @@ verify the code of canisters on the Internet Computer.
 
 - **_Cover only support DFX 0.8.4 or above_**
 - **NOTE**: If you're using _DFX 0.9.3_ and above, when you build your wasm, DFX might automatically optimize the wasm for you when `ic-cdk-optimizer` is installed.
-- **NOTE**: _DFX 0.11.0_ and above, by default, run optimization automatically.
 - Same environment with our `Builder` ([dockerfile](https://github.com/Psychedelic/cover-builder/blob/main/dockerfile)).
 - Note that `dfx version` or `rust version` can affect the build result.
 - Must specify `type` field in the `dfx.json` file, we only support `rust`, `motoko` and `custom`.
+- **NOTE**: _DFX 0.11.0_ and above will run optimization automatically for `rust` ([reference](https://internetcomputer.org/docs/current/developer-docs/updates/release-notes/#refactor-optimize-from-ic-wasm)).
 - **NOTE**: `custom` build is not recommended; it’s considered unsafe.
 - Cover validator and builder will update the build status for you to follow. You can only re-build your canister when
   the Cover builder finishes its job and updates the status to either Error or Success. If the Cover builder failed to
