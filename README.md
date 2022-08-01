@@ -27,7 +27,6 @@ verify the code of canisters on the Internet Computer.
 - Note that `dfx version` or `rust version` can affect the build result.
 - Must specify `type` field in the `dfx.json` file, we only support `rust`, `motoko` and `custom`.
 - **NOTE**: _DFX 0.11.0_ and above will run optimization automatically for `rust` ([reference](https://internetcomputer.org/docs/current/developer-docs/updates/release-notes/#refactor-optimize-from-ic-wasm)).
-- **NOTE**: `custom` build is not recommended; it’s considered unsafe.
 - Cover validator and builder will update the build status for you to follow. You can only re-build your canister when
   the Cover builder finishes its job and updates the status to either Error or Success. If the Cover builder failed to
   update build status, you’ll have to wait **5 minutes** before rebuilding your canister. So make sure to fill your
