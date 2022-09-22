@@ -57,7 +57,7 @@ jobs:
         run: |
           CALLER_ID=$(echo "${{ github.event.inputs.caller_id_and_delegate_canister_id }}" | cut -d "|" -f 1)
           DELEGATE_CANISTER_ID=$(echo "${{ github.event.inputs.caller_id_and_delegate_canister_id }}" | cut -d "|" -f 2)
-          if [[ -z ${DELEGATE_CANISTER_ID} ]]; then
+          if [ -z ${DELEGATE_CANISTER_ID} ]; then
             DELEGATE_CANISTER_ID=null
           else
             DELEGATE_CANISTER_ID="opt principal\"${DELEGATE_CANISTER_ID}\""
@@ -77,7 +77,7 @@ jobs:
       - name: Parse rust version info
         run: |
           RUST_VERSION_RESULT=null
-          if [[ ! -z ${{ github.event.inputs.rust_version }} ]]; then
+          if [ ! -z ${{ github.event.inputs.rust_version }} ]; then
             RUST_VERSION_RESULT="opt\"${{ github.event.inputs.rust_version }}\""
           fi
           echo "RUST_VERSION_RESULT=${RUST_VERSION_RESULT}" >> $GITHUB_ENV
