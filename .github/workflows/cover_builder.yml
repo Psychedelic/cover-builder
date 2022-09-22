@@ -3,8 +3,8 @@ name: Cover build
 on:
   workflow_dispatch:
     inputs:
-      owner_id_and_delegate_canister_id:
-        description: 'Owner id and delegate canister id'
+      caller_id_and_delegate_canister_id:
+        description: 'Caller id and delegate canister id'
         required: true
         type: string
       canister_id:
@@ -55,14 +55,14 @@ jobs:
       # validated by cover-validator
       - name: Parse canister info
         run: |
-          OWNER_ID=$(echo "${{ github.event.inputs.owner_id_and_delegate_canister_id }}" | cut -d "|" -f 1)
-          DELEGATE_CANISTER_ID=$(echo "${{ github.event.inputs.owner_id_and_delegate_canister_id }}" | cut -d "|" -f 2)
+          CALLER_ID=$(echo "${{ github.event.inputs.caller_id_and_delegate_canister_id }}" | cut -d "|" -f 1)
+          DELEGATE_CANISTER_ID=$(echo "${{ github.event.inputs.caller_id_and_delegate_canister_id }}" | cut -d "|" -f 2)
           if [[ -z ${DELEGATE_CANISTER_ID} ]]; then
             DELEGATE_CANISTER_ID=null
           else
             DELEGATE_CANISTER_ID="opt principal\"${DELEGATE_CANISTER_ID}\""
           fi
-          echo "OWNER_ID=${OWNER_ID}" >> $GITHUB_ENV
+          echo "CALLER_ID=${CALLER_ID}" >> $GITHUB_ENV
           echo "DELEGATE_CANISTER_ID=${DELEGATE_CANISTER_ID}" >> $GITHUB_ENV
 
       # validated by cover-validator
@@ -127,7 +127,7 @@ jobs:
         run: |
           dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
-            owner_id=principal\"${OWNER_ID}\"; \
+            caller_id=principal\"${CALLER_ID}\"; \
             delegate_canister_id=${DELEGATE_CANISTER_ID}; \
             canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
             canister_name=\"${{ github.event.inputs.canister_name }}\"; \
@@ -251,7 +251,7 @@ jobs:
 
           dfx canister --network ic call "${CANISTER_ID}" submitVerification  \
           "(record{ \
-            owner_id=principal\"${OWNER_ID}\"; \
+            caller_id=principal\"${CALLER_ID}\"; \
             delegate_canister_id=${DELEGATE_CANISTER_ID}; \
             canister_id=principal\"${{ github.event.inputs.canister_id }}\"; \
             canister_name=\"${{ github.event.inputs.canister_name }}\"; \
